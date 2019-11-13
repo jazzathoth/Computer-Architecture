@@ -1,13 +1,30 @@
 """CPU functionality."""
-
 import sys
+
 
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.memory = bytearray(256)
+        self.registers = [0] * 8
+
+        self.pc = 0
+        self.ir = [0] * 8
+        self.mar = [0] * 8
+        self.mdr = [0] * 8
+        self.fl = [0] * 8
+
+        # self.stack = StackLambda()
+
+    def ram_read(self, address):
+        value = self.memory[address]
+        return value
+
+    def ram_write(self, address, value):
+        self.memory[address] = value
+        return
 
     def load(self):
         """Load a program into memory."""
@@ -27,7 +44,7 @@ class CPU:
         ]
 
         for instruction in program:
-            self.ram[address] = instruction
+            self.memory[address] = instruction
             address += 1
 
 
@@ -35,7 +52,7 @@ class CPU:
         """ALU operations."""
 
         if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+            self.registers[reg_a] += self.registers[reg_b]
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -56,10 +73,40 @@ class CPU:
         ), end='')
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            print(" %02X" % self.registers[i], end='')
 
         print()
 
     def run(self):
         """Run the CPU."""
+
+        halt = False
+
+        while not halt:
+            instruction = self.ram_read(self.pc)
+
+            if instruction == 0x01:
+                halt = True
+                self.pc += 1
+            elif instruction == 0x82:
+                self.pc += 1
+                reg_n = self.ram_read(self.pc)
+                self.pc += 1
+                value = self.ram_read(self.pc)
+                self.pc += 1
+                self.registers[reg_n] = value
+
+            elif instruction == 0x47:
+                self.pc += 1
+                print(int(self.registers[self.ram_read(self.pc)]))
+                self.pc += 1
+            else:
+                print(f"exception: no instruction {instruction}")
+
+
+
+
+
+
+
         pass
