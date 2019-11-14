@@ -26,22 +26,28 @@ class CPU:
         self.memory[address] = value
         return
 
-    def load(self):
+    def load(self, file):
         """Load a program into memory."""
+        read_file = open(file, 'r')
+        program = []
+        for line in read_file:
+            if (line[0] is not "#") and (line[0] is not "\n"):
+                program.append(int(line[:8], 2))
+
 
         address = 0
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
 
         for instruction in program:
             self.memory[address] = instruction
@@ -100,6 +106,17 @@ class CPU:
                 self.pc += 1
                 print(int(self.registers[self.ram_read(self.pc)]))
                 self.pc += 1
+
+            elif instruction == 0xa2:
+                self.pc += 1
+                reg_n1 = self.ram_read(self.pc)
+                self.pc += 1
+                reg_n2 = self.ram_read(self.pc)
+                self.pc += 1
+                self.registers[reg_n1] = self.registers[reg_n1] * self.registers[reg_n2]
+
+
+
             else:
                 print(f"exception: no instruction {instruction}")
 
