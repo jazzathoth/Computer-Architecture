@@ -1,6 +1,19 @@
 """CPU functionality."""
 import sys
+class Stack():
+    def __init__(self):
+        self.stack = []
 
+    def push(self, value):
+        self.stack.append(value)
+    def pop(self):
+        if self.size() > 0:
+            return self.stack.pop()
+        else:
+            return None
+
+    def size(self):
+        return len(self.stack)
 
 class CPU:
     """Main CPU class."""
@@ -11,12 +24,13 @@ class CPU:
         self.registers = [0] * 8
 
         self.pc = 0
-        self.ir = [0] * 8
-        self.mar = [0] * 8
-        self.mdr = [0] * 8
-        self.fl = [0] * 8
+        self.ir = [0]
+        self.mar = [0]
+        self.mdr = [0]
+        self.fl = [0]
 
-        # self.stack = StackLambda()
+        self.stack = Stack()
+        #self.SP = self.stack.stack[-1]
 
     def ram_read(self, address):
         value = self.memory[address]
@@ -94,6 +108,7 @@ class CPU:
             if instruction == 0x01:
                 halt = True
                 self.pc += 1
+                print("halted")
             elif instruction == 0x82:
                 self.pc += 1
                 reg_n = self.ram_read(self.pc)
@@ -101,6 +116,8 @@ class CPU:
                 value = self.ram_read(self.pc)
                 self.pc += 1
                 self.registers[reg_n] = value
+                # print(f"set reg {reg_n} to {self.registers[reg_n]}")
+                # print(f"pc = {self.pc}")
 
             elif instruction == 0x47:
                 self.pc += 1
@@ -114,9 +131,38 @@ class CPU:
                 reg_n2 = self.ram_read(self.pc)
                 self.pc += 1
                 self.registers[reg_n1] = self.registers[reg_n1] * self.registers[reg_n2]
-
-
-
+            elif instruction == 0xa7:
+                self.pc += 1
+                reg_n1 = self.ram_read(self.pc)
+                self.pc += 1
+                reg_n2 = self.ram_read(self.pc)
+                self.pc += 1
+                if self.registers[reg_n1] == self.registers[reg_n2]:
+                    self.fl = 1
+                elif self.registers[reg_n1] > self.registers[reg_n2]:
+                    self.fl = 1 << 1
+                elif self.registers[reg_n1] < self.registers[reg_n2]:
+                    self.fl = 1 << 2
+                else:
+                    print(f"Something went wrong. R1: {reg_n1}, R2: {reg_n2}")
+            elif instruction == 0x55:
+                self.pc += 1
+                reg_n = self.ram_read(self.pc)
+                self.pc += 1
+                if 1 & self.fl == 1:
+                    self.pc = self.registers[reg_n]
+                    # print(f"jumped, register {reg_n}, to loc {self.registers[reg_n]}")
+            elif instruction == 0x56:
+                self.pc += 1
+                reg_n = self.ram_read(self.pc)
+                self.pc += 1
+                if 1 & self.fl == 0:
+                    self.pc = self.registers[reg_n]
+            elif instruction == 0x54:
+                self.pc += 1
+                reg_n = self.ram_read(self.pc)
+                self.pc += 1
+                self.pc = self.registers[reg_n]
             else:
                 print(f"exception: no instruction {instruction}")
 
@@ -126,4 +172,4 @@ class CPU:
 
 
 
-        pass
+        return
